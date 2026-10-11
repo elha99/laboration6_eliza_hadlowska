@@ -7,48 +7,84 @@
 const form = document.querySelector("#searchform");
 const error = document.querySelector("#error");
 const searchInput = document.querySelector("#search");
+const noRecipe = document.querySelector("#message")
+const recipe = document.querySelector("#recipe")
 
 form.addEventListener("submit", onSubmit)
 
-/* document.addEventListener("DOMContentLoaded", ()=> {
-    searchRecipes();
-/*     displayErrors();
-}) */
+
+
 
 function onSubmit(event) {
     event.preventDefault();
 
-    displayErrors();
+    loadRecipes(search);
 
-/*     if (!displayErrors) {
+/*     if (!displayErrors()) {
         searchRecipes();
-    } */
-
+        loadRecipes();
+    }
+ */
 
 }
-
 
 async function searchRecipes() {
+    const search = searchInput.value.trim();
+    
     try {
-        const response = await fetch('https://dummyjson.com/recipes/search?q=SÖKFRAS');
+        const response = await fetch(`https://dummyjson.com/recipes/search?q=${search}`);
+        if (!response.ok) {
+            throw new Error("Kunde inte hämta resultatet");
+        }
         const data = await response.json();
-        console.log(data)
+        return data;
     } catch (error) {
         console.error("Error: ", error)
+        return [];
     }
-
-    console.log("Här fortsätter mitt program ...")
 }
 
-console.log(searchRecipes());
+async function loadRecipes() {
+    const data = await searchRecipes();
+    recipe.innerHTML = "";
+
+    data.recipes.forEach(recipeItem => {
+        const article = document.createElement('article');
+        article.innerHTML = `
+                    <h3>${recipeItem.name}</h3>
+
+                    <img src="${recipeItem.image}" alt="...">
+
+                    <div class="recipe-info">
+                        <p><strong>Servings:</strong>${recipeItem.servings}</p>
+                        <p><strong>Prep time:</strong>${recipeItem.prepTimeMinutes}</p>
+                        <p><strong>Cooking time:</strong>${recipeItem.cookTimeMinutes}</p>
+                        <p><strong>Difficulty:</strong>${recipeItem.difficulty}</p>
+                    </div>
+
+                    <h4>${recipeItem.ingredients}</h4>
+                    <ul>
+                        ${recipeItem.ingredients    
+                        .map((ingredient) => `<li>${ingredient}</li>`)
+                        .join("")}
+                    </ul>
+
+                    <h4>${recipeItem.instructions}</h4>
+                    <ol>
+                        <li>First step.</li>
+                        <li>Second step.</li>
+                    </ol>`
+
+            recipe.appendChild(article);
+    });
+}
+
 
 function displayErrors() {
 
     error.textContent = "";
 
     let validate = true;
-
-    const search = searchInput.value.trim();
 
     if (search === "") {
         error.textContent = "Du måste ange ett sökord";

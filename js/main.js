@@ -12,40 +12,50 @@ const recipe = document.querySelector("#recipe")
 
 form.addEventListener("submit", onSubmit)
 
-
-
-
-function onSubmit(event) {
+async function onSubmit(event) {
     event.preventDefault();
-
-    loadRecipes(search);
-
-/*     if (!displayErrors()) {
-        searchRecipes();
-        loadRecipes();
-    }
- */
-
-}
-
-async function searchRecipes() {
-    const search = searchInput.value.trim();
     
+    error.textContent = "";
+    const search = searchInput.value.trim();
+
+/*     const data = await loadRecipes(searchInput); */
+
+    if (search === "") {
+        displayError(search);
+    } else {
+        loadRecipes(search);
+    }
+
+    
+} 
+
+async function searchRecipes(searchText) {
+/*     if (!search) return []; */
+
     try {
-        const response = await fetch(`https://dummyjson.com/recipes/search?q=${search}`);
+        const response = await fetch(`https://dummyjson.com/recipes/search?q=${searchText}`);
         if (!response.ok) {
-            throw new Error("Kunde inte hämta resultatet");
+            throw new Error("Kunde inte hämta recepten. Försök igen senare");
         }
         const data = await response.json();
-        return data;
+        return data.recipes || [];
     } catch (error) {
         console.error("Error: ", error)
         return [];
     }
 }
 
-async function loadRecipes() {
-    const data = await searchRecipes();
+async function loadRecipes(search) {
+    const data = await searchRecipes(search);
+    
+    if (data && data.length > 0) { 
+        const firstRecipe = data[0]; 
+        console.log("Här är det första receptet:", firstRecipe); 
+        return firstRecipe; 
+    } else { 
+        console.log("Inga sökresultat hittade, prova med annan fras"); 
+    }    
+
     recipe.innerHTML = "";
 
     data.recipes.forEach(recipeItem => {
@@ -55,7 +65,7 @@ async function loadRecipes() {
 
                     <img src="${recipeItem.image}" alt="...">
 
-                    <div class="recipe-info">
+                   <div class="recipe-info">
                         <p><strong>Servings:</strong>${recipeItem.servings}</p>
                         <p><strong>Prep time:</strong>${recipeItem.prepTimeMinutes}</p>
                         <p><strong>Cooking time:</strong>${recipeItem.cookTimeMinutes}</p>
@@ -71,17 +81,16 @@ async function loadRecipes() {
 
                     <h4>${recipeItem.instructions}</h4>
                     <ol>
-                        <li>First step.</li>
-                        <li>Second step.</li>
-                    </ol>`
+                        ${recipeItem.instructions
+                        .map((instructions) => `<li>${instructions}</li>`)
+                        .join("")}
+                    </ol> ` 
 
             recipe.appendChild(article);
     });
 }
 
-
-function displayErrors() {
-
+function displayError(search) {
     error.textContent = "";
 
     let validate = true;

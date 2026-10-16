@@ -23,6 +23,7 @@ function onSubmit(event) {
 
     //Om sökfältet är tomt ska felmeddelande visas annars ska den ladda in recept
     if (search === "") {
+        recipe.innerHTML = "";
         displayError(search);
     } else {
         loadRecipes(search);

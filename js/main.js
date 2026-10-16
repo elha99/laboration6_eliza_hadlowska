@@ -9,15 +9,19 @@ const error = document.querySelector("#error");
 const searchInput = document.querySelector("#search");
 const errorMessage = document.querySelector("#message")
 
-
 form.addEventListener("submit", onSubmit)
 
+//Eventlyssnaren för sökfältet
 function onSubmit(event) {
     event.preventDefault();
 
+    //Rensa felmeddelanden
     error.textContent = "";
+
+    //Läs in värdet som skrivs in i sökfältet
     const search = searchInput.value;
 
+    //Om sökfältet är tomt ska felmeddelande visas annars ska den ladda in recept
     if (search === "") {
         displayError(search);
     } else {
@@ -37,9 +41,12 @@ async function searchRecipes(search) {
         //Läs JSON-data
         const data = await response.json();
         return data.recipes || [];
-        //Fånga upp fel/errors
+    //Rensa tidigare felmeddelanden och recept samt fånga upp nya fel/errors
     } catch (error) {
+        recipe.innerHTML = "";
+        errorMessage.textContent = "";
         console.error("Error: ", error)
+        errorMessage.textContent = "Ett fel uppstod: ", error;
         return [];
     }
 }
@@ -53,48 +60,49 @@ async function loadRecipes(search) {
     //Hämta sektionen med receptet från HTML-filen
     const recipe = document.querySelector("#recipe");
 
-    //Visa endast det första receptet
+    //Rensa tidigare recept och felmeddelanden
+    recipe.innerHTML = "";
+    errorMessage.textContent = "";
+
+    //Visa endast det första receptet ifall det finns flera recept med samma sökord
     if (data.length > 0) { 
         const firstRecipe = data[0]; 
-        console.log("Här är det första receptet:", firstRecipe); 
-        return firstRecipe; 
-    } else { 
-        console.log("Inga sökresultat hittade, prova med annan sökfras"); 
-    }
-
-    recipe.innerHTML = "";
-    
-    //Visa endast efterfrågat resultat
-    data.recipes.forEach(recipeItem => {
+        console.log("Här är det första receptet:", firstRecipe);
+        
+        //Visa receptet med inhämtad information från API
         const article = document.createElement('article');
         article.innerHTML = `
-                    <h3>${recipeItem.name}</h3>
+            <h3>${firstRecipe.name}</h3>
 
-                    <img src="${recipeItem.image}" alt="...">
+            <img src="${firstRecipe.image}" alt="...">
 
-                   <div class="recipe-info">
-                        <p><strong>Servings:</strong>${recipeItem.servings}</p>
-                        <p><strong>Prep time:</strong>${recipeItem.prepTimeMinutes}</p>
-                        <p><strong>Cooking time:</strong>${recipeItem.cookTimeMinutes}</p>
-                        <p><strong>Difficulty:</strong>${recipeItem.difficulty}</p>
-                    </div>
+            <div class="recipe-info">
+                <p><strong>Servings:</strong>${firstRecipe.servings}</p>
+                <p><strong>Prep time:</strong>${firstRecipe.prepTimeMinutes}</p>
+                <p><strong>Cooking time:</strong>${firstRecipe.cookTimeMinutes}</p>
+                <p><strong>Difficulty:</strong>${firstRecipe.difficulty}</p>
+            </div>
 
-                    <h4>${recipeItem.ingredients}</h4>
-                    <ul>
-                        ${recipeItem.ingredients    
-                        .map((ingredient) => `<li>${ingredient}</li>`)
-                        .join("")}
-                    </ul>
+            <h4>Ingredients</h4>
+            <ul>
+                ${firstRecipe.ingredients    
+                .map((ingredient) => `<li>${ingredient}</li>`)
+                .join("")}
+            </ul>
 
-                    <h4>${recipeItem.instructions}</h4>
-                    <ol>
-                        ${recipeItem.instructions
-                        .map((instruction) => `<li>${instruction}</li>`)
-                        .join("")}
-                    </ol> ` 
+            <h4>Instructions</h4>
+            <ol>
+                ${firstRecipe.instructions
+                .map((instruction) => `<li>${instruction}</li>`)
+                .join("")}
+            </ol> ` 
 
-            recipe.appendChild(article);
-    });   
+            recipe.appendChild(article); 
+    } else { 
+        //Skriver ut meddelande till både konsol och användare ifall det inte finns sökresultat
+        console.log("Inga sökresultat hittade, prova med annan sökfras");
+        errorMessage.textContent = "Inga sökresultat hittade, prova med annan sökfras";
+    }
 }
 
 //Funktion som visar felmeddelande
